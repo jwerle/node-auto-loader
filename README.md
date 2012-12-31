@@ -27,7 +27,7 @@ thing   = new things.Thing("db thing");
 
 ### Issues
 Found a bug?
-[Email](joseph.werle@gmail.com) or [submit](https://github.com/jwerle/node-auto-loader/issues) all issues
+[Email](mailto:joseph.werle@gmail.com) or [submit](https://github.com/jwerle/node-auto-loader/issues) all issues
 
 Copyright and license
 ---------------------
