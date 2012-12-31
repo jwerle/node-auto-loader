@@ -12,7 +12,10 @@ $ sudo npm install auto-loader
 
 ### Usage
 You can use the loader by simply passing it a directory path. Assume you have a directory structure like this:
-```
+```sh
+├── index.js
+└── things
+    └── Thing.js
 ```
 
 You could then load this module structure like this:
