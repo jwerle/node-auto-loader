@@ -1,6 +1,6 @@
 {
   "name": "auto-loader",
-  "version": "0.2.3",
+  "version": "0.0.1",
   "description": "",
   "keywords": [
     "node",
@@ -9,6 +9,9 @@
   "author": "Jospeh Werle <joseph.werle@gmail.com>",
   "scripts" : {
     "test" : "make test"
+  },
+  "dependencies": {
+    "utilities"     : "0.0.x"
   },
   "repository": {
     "type": "git",
