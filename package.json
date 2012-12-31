@@ -1,0 +1,20 @@
+{
+  "name": "auto-loader",
+  "version": "0.2.3",
+  "description": "",
+  "keywords": [
+    "node",
+    "auto load"
+  ],
+  "author": "Jospeh Werle <joseph.werle@gmail.com>",
+  "scripts" : {
+    "test" : "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jwerle/node-auto-loader.git"
+  },
+  "engines": {
+    "node": ">= 0.6"
+  }
+}
