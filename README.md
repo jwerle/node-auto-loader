@@ -1,5 +1,6 @@
 node-auto-loader
 ===============
+
 [![Build Status](https://travis-ci.org/jwerle/node-auto-loader.png?branch=master)](https://travis-ci.org/jwerle/node-auto-loader)
 
 A simple auto loader for nodejs
