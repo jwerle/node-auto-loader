@@ -18,7 +18,7 @@ You can use the loader by simply passing it a directory path. Assume you have a 
     └── Thing.js
 ```
 
-You could then load this module structure like this:
+You could then load this module structure from the index.js file like this:
 ```js
 var loader, Loader, things, thing
 
