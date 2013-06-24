@@ -85,8 +85,10 @@ Loader.prototype.__proto__ = EventEmitter.prototype;
 Loader.prototype.load = function () {
 	var dir = this.directory
 		,	files = fs.readdirSync(dir)
+		,	tree = Tree(dir, files);
 
-	return Tree(dir, files);
+	this.emit('load', tree);
+	return tree;
 };
 
 
@@ -119,6 +121,9 @@ function Tree (root, children) {
 
 	var _path = root._path
 	children.map(function (child) {
+		// skip `index.js`
+		if (!!~['index', 'index.js'].indexOf(child)) return;
+
 		var fpath = [_path, child].join('/')
 			,	ext = path.extname(child)
 			,	name = child.replace(ext, '')

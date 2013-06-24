@@ -5,50 +5,78 @@ A simple auto loader for nodejs
 
 [![Build Status](https://travis-ci.org/jwerle/node-auto-loader.png?branch=master)](https://travis-ci.org/jwerle/node-auto-loader)
 
-### Install
+## Install
 ```
 $ sudo npm install auto-loader
 ```
 
-### Usage
-You can use the loader by simply passing it a directory path. Assume you have a directory structure like this:
+## Usage
+
+suppose you had a directory structure like this
+
 ```sh
-├── index.js
-└── things
-    └── Thing.js
+app/
+└── controllers
+    ├── Application.js
+    └── User.js
 ```
 
-You could then load this module structure from the index.js file like this:
+you could build a tree with `auto-loader` like this
+
 ```js
-var loader, Loader, things, thing
-
-Loader  = require('auto-loader').Loader
-loader  = new Loader(__dirname + '/things');
-things  = loader.load().things;
-thing   = new things.Thing("db thing");
+var app = require('auto-loader').load(__dirname +'/app')
 ```
 
-### Issues
-Found a bug?
-[Email](mailto:joseph.werle@gmail.com) or [submit](https://github.com/jwerle/node-auto-loader/issues) all issues
+if you were to `console.log` the contents of that object you would see this
 
-Copyright and license
----------------------
+```json
+{ _path: '/Users/jwerle/repos/node-auto-loader/test/app',
+  controllers:
+   { _path: '/Users/jwerle/repos/node-auto-loader/test/app/controllers',
+     Application: [Getter/Setter],
+     User: [Getter/Setter] } }
+```
 
-Copyright 2012
+all modules are wrapped in a `getter` and make a call to `require` to fetch their definitions and are cached after the first require
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this work except in compliance with the License.
-You may obtain a copy of the License in the LICENSE file, or at:
+```js
+app.controllers.Application; // [Function: Application]
+```
 
-   http://www.apache.org/licenses/LICENSE-2.0
+## api
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+### .load(dir)
 
-- - -
-node-auto-loader copyright 2012
-moovatom - joseph.werle@gmail.com
+* `dir` directory to load recursively
+
+***example***
+
+```js
+var loader = require('auto-loader')
+var modules = loader.load(__dirname);
+console.log(modules);
+/**
+ { _path: '/Users/jwerle/repos/node-auto-loader/test/module',
+  module1: [Getter/Setter],
+  module2: [Getter/Setter],
+  module3: [Getter/Setter] }
+**/
+```
+
+### Loader(dir)
+
+creates a new `Loader` instance
+
+* `dir` - root director for loader
+
+***example***
+
+```js
+var loader = new Loader(__dirname)
+// load the currenty directory
+loader.load();
+```
+
+## license
+
+MIT

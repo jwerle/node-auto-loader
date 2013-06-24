@@ -1,5 +1,5 @@
 
 test:
-	@mocha -R spec test/test.js
+	@./node_modules/.bin/mocha -R spec test/test.js
 
 .PHONY: test
