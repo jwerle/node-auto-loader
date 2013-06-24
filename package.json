@@ -7,17 +7,18 @@
     "auto load"
   ],
   "author": "Jospeh Werle <joseph.werle@gmail.com>",
-  "scripts" : {
-    "test" : "make test"
+  "scripts": {
+    "test": "make test"
   },
-  "dependencies": {
-    "utilities"     : "0.0.x"
-  },
+  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/jwerle/node-auto-loader.git"
   },
   "engines": {
     "node": ">= 0.6"
+  },
+  "devDependencies": {
+    "mocha": "~1.11.0"
   }
 }
