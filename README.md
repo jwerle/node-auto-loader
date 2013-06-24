@@ -29,7 +29,7 @@ var app = require('auto-loader').load(__dirname +'/app')
 
 if you were to `console.log` the contents of that object you would see this
 
-```json
+```js
 { _path: '/Users/jwerle/repos/node-auto-loader/test/app',
   controllers:
    { _path: '/Users/jwerle/repos/node-auto-loader/test/app/controllers',
