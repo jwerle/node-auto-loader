@@ -1,14 +1,20 @@
 
 /**
- * module dependencies
+ * Module dependencies
  */
 
 var EventEmitter = require('events').EventEmitter
-	,	fs = require('fs')
-	, path = require('path')
-	, define = Object.defineProperty
-	, isArray = Array.isArray
+  , fs = require('fs')
+  , path = require('path')
 
+var define = Object.defineProperty;
+var isArray = Array.isArray
+var stat = fs.statSync;
+var readdir = fs.readdirSync;
+var relative = path.relative;
+var resolve = path.resolve;
+var extname = path.extname;
+var dirname = path.dirname;
 
 /**
  * Checks if path is a directory
@@ -16,11 +22,10 @@ var EventEmitter = require('events').EventEmitter
  * @api private
  * @param {String} filepath
  */
+
 function isDirectory (filepath) {
-  try { 
-    fs.readdirSync(filepath)
-    return true;
-  } catch (e) { return false; }
+  try { return stat(filepath).isDirectory(); }
+  catch (e) { return false; }
 }
 
 /**
@@ -30,15 +35,9 @@ function isDirectory (filepath) {
  * @param {String} filepath
  */
 function isFile (filepath) {
-  try { 
-    if (!isDirectory(filepath) && fs.existsSync(filepath)) {
-      return true;
-    }
-  } catch (e) { return false; }
-  return false;
+  try { return stat(filepath).isFile(); }
+  catch (e) { return false; }
 }
-
-
 
 /**
  * creates a new `Loader` instance
@@ -48,13 +47,23 @@ function isFile (filepath) {
  */
 
 module.exports = Loader;
+// legacy
 module.exports.Loader = Loader;
 function Loader (dir) {
-	if (!(this instanceof Loader)) return new Loader(dir);
-	else if (!isDirectory(dir)) throw new Error("invalid directory");
-	this.directory = dir;
+  var tmp = null;
+  if (!(this instanceof Loader)) return new Loader(dir);
+  tmp = dir;
+  if (!isDirectory(dir)) { tmp = resolve(dirname(module.parent.id), dir) }
+  dir = tmp;
+  if (!isDirectory(dir)) { throw new Error("Invalid directory"); }
+  this.directory = dir;
 }
 
+/**
+ * inherit from `EventEmitter`
+ */
+
+Loader.prototype.__proto__ = EventEmitter.prototype;
 
 /**
  * loads a directory's files as modules
@@ -63,17 +72,9 @@ function Loader (dir) {
  * @param {String} dir
  */
 
-Loader.load = function (dir) {
-	return Loader(dir).load();
+module.exports.load = function (dir) {
+  return new Loader(dir).load();
 };
-
-
-/**
- * inherit from `EventEmitter`
- */
-
-Loader.prototype.__proto__ = EventEmitter.prototype;
-
 
 /**
  * loads a directory recursively requiring
@@ -83,14 +84,11 @@ Loader.prototype.__proto__ = EventEmitter.prototype;
  */
 
 Loader.prototype.load = function () {
-	var dir = this.directory
-		,	files = fs.readdirSync(dir)
-		,	tree = Tree(dir, files);
-
-	this.emit('load', tree);
-	return tree;
+  var dir = this.directory;
+  var files = fs.readdirSync(dir);
+  var tree = new Tree(dir, files);
+  return this.emit('load', tree), tree;
 };
-
 
 /**
  * file tree abstraction
@@ -102,46 +100,50 @@ Loader.prototype.load = function () {
 
 module.exports.Tree = Tree;
 function Tree (root, children) {
-	// ensure instance
-	if (!(this instanceof Tree)) return new Tree(root, children);
+  var path = null;
+  var child = null;
+  var i = 0;
 
-	if ('string' === typeof root) {
-		if (!isDirectory(root)) throw new Error("`root` is not a directory");
-		root = { _path: root };
-	}
+  // ensure instance
+  if (!(this instanceof Tree)) return new Tree(root, children);
 
-	if ('object' !== typeof children || !isArray(children)) {
-		children = [];
-	}
+  if ('string' === typeof root) {
+    if (!isDirectory(root)) { throw new Error("`root' is not a directory"); }
+    path = root; root = {};
+    define(root, 'path', {
+      enumerable: false,
+      writable: false,
+      value: path
+    });
+  }
 
-	// there must be a `_path` property on the `root` object
-	if (!root._path) throw new Error("reached root without `_path` property");
-	// just return the `root` object if there are no children
-	else if (!children.length) return root;
+  if (false == isArray(children)) { children = []; }
 
-	var _path = root._path
-	children.map(function (child) {
-		// skip `index.js`
-		if (!!~['index', 'index.js'].indexOf(child)) return;
+  // there must be a `path` property on the `root` object
+  if (!root.path) { throw new Error("Reached root without `path' property"); }
+  // just return the `root` object if there are no children
+  else if (!children.length) { return root; }
 
-		var fpath = [_path, child].join('/')
-			,	ext = path.extname(child)
-			,	name = child.replace(ext, '')
-		
-		if (isDirectory(fpath)) {
-			root[name] = Tree(fpath, fs.readdirSync(fpath))
-		} else if (isFile(fpath)) {
-			define(root, name, {
-				enumerable: true,
-				set: function () {},
-				get: function () {
-					return require(fpath)
-				}
-			});
-		} else {
-			throw new Error("reached invalid file '"+ fpath +"'");
-		}
-	});
+  path = root.path
 
-	return root;
+  for (; i < children.length; ++i) void function (child) {
+    child = children[i];
+    // skip `index.js`
+    if (!!~['index', 'index.js'].indexOf(child)) return;
+
+    var fpath = [path, child].join('/');
+    var ext = extname(child);
+    var name = child.replace(ext, '');
+
+    if (isDirectory(fpath)) {
+      root[name] = Tree(fpath, readdir(fpath));
+    } else if (isFile(fpath)) {
+      define(root, name, {
+        enumerable: true,
+        get: function () { return require(fpath) }
+      });
+    } else { throw new Error("Reached invalid file `"+ fpath +"'"); }
+  }(children[i]);
+
+  return root;
 }
