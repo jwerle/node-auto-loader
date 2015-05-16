@@ -4,8 +4,8 @@
  */
 
 var EventEmitter = require('events').EventEmitter
-  , fs = require('fs')
-  , path = require('path')
+var fs = require('fs')
+var path = require('path')
 
 var define = Object.defineProperty;
 var isArray = Array.isArray
@@ -72,8 +72,8 @@ Loader.prototype.__proto__ = EventEmitter.prototype;
  * @param {String} dir
  */
 
-module.exports.load = function (dir) {
-  return new Loader(dir).load();
+module.exports.load = function (dir,exclude) {
+  return new Loader(dir).load(exclude);
 };
 
 /**
@@ -83,10 +83,8 @@ module.exports.load = function (dir) {
  * @api public
  */
 
-Loader.prototype.load = function () {
-  var dir = this.directory;
-  var files = fs.readdirSync(dir);
-  var tree = new Tree(dir, files);
+Loader.prototype.load = function (exclude) {
+  var tree = new Tree(this.directory, fs.readdirSync(this.directory), exclude, 1);
   return this.emit('load', tree), tree;
 };
 
@@ -96,16 +94,18 @@ Loader.prototype.load = function () {
  * @api public
  * @param {Object} root
  * @param {Array} children
+ * @param {Array} exclude
  */
 
 module.exports.Tree = Tree;
-function Tree (root, children) {
+function Tree (root, children, exclude, indent) {
+
   var path = null;
   var child = null;
   var i = 0;
 
   // ensure instance
-  if (!(this instanceof Tree)) return new Tree(root, children);
+  if (!(this instanceof Tree)) return new Tree(root, children, exclude, indent);
 
   if ('string' === typeof root) {
     if (!isDirectory(root)) { throw new Error("`root' is not a directory"); }
@@ -131,12 +131,41 @@ function Tree (root, children) {
     // skip `index.js`
     if (!!~['index', 'index.js'].indexOf(child)) return;
 
-    var fpath = [path, child].join('/');
-    var ext = extname(child);
-    var name = child.replace(ext, '');
+    var fpath     = [path, child].join('/');
+    var ext       = extname(child);
+    var name      = child.replace(ext, '');
+    var canIndent = true;
 
     if (isDirectory(fpath)) {
-      root[name] = Tree(fpath, readdir(fpath));
+
+      var cpath = readdir(fpath);
+      if (false == isArray(cpath)) { cpath = []; }
+      if (exclude){
+        canIndent = true;
+        exclude.forEach(function (element, index) {
+          pathArray     = element.split("/");
+          pathArrayLast = pathArray.length;
+          target        = pathArray.splice(indent-1, 1);
+
+          if(target.indexOf(child) >= 0){
+            if(indent == pathArrayLast){
+              delete exclude[index];
+              canIndent = false;
+            }
+          }
+        })
+
+        if(canIndent){
+          indent++;
+          root[name] = Tree(fpath, cpath, exclude, indent);
+          indent--;
+        }
+      }else{
+        indent++;
+        root[name] = Tree(fpath, cpath, exclude, indent);
+        indent--;
+      }
+
     } else if (isFile(fpath)) {
       define(root, name, {
         enumerable: true,
