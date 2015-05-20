@@ -3,18 +3,18 @@
  * Module dependencies
  */
 
-var EventEmitter = require('events').EventEmitter
-var fs = require('fs')
-var path = require('path')
+var fs           = require('fs');
+var path         = require('path');
+var EventEmitter = require('events').EventEmitter;
 
-var define = Object.defineProperty;
-var isArray = Array.isArray
-var stat = fs.statSync;
-var readdir = fs.readdirSync;
-var relative = path.relative;
-var resolve = path.resolve;
-var extname = path.extname;
-var dirname = path.dirname;
+var define    = Object.defineProperty;
+var isArray   = Array.isArray;
+var stat      = fs.statSync;
+var readdir   = fs.readdirSync;
+var relative  = path.relative;
+var resolve   = path.resolve;
+var extname   = path.extname;
+var dirname   = path.dirname;
 
 /**
  * Checks if path is a directory
@@ -22,7 +22,6 @@ var dirname = path.dirname;
  * @api private
  * @param {String} filepath
  */
-
 function isDirectory (filepath) {
   try { return stat(filepath).isDirectory(); }
   catch (e) { return false; }
@@ -45,9 +44,6 @@ function isFile (filepath) {
  * @api public
  * @param {String} dir
  */
-
-module.exports = Loader;
-// legacy
 module.exports.Loader = Loader;
 function Loader (dir) {
   var tmp = null;
@@ -96,8 +92,6 @@ Loader.prototype.load = function (exclude) {
  * @param {Array} children
  * @param {Array} exclude
  */
-
-module.exports.Tree = Tree;
 function Tree (root, children, exclude, indent) {
 
   var path = null;
@@ -126,52 +120,58 @@ function Tree (root, children, exclude, indent) {
 
   path = root.path
 
-  for (; i < children.length; ++i) void function (child) {
+  for (var i = 0; i < children.length; ++i) void function (child) {
     child = children[i];
-    // skip `index.js`
-    if (!!~['index', 'index.js'].indexOf(child)) return;
 
     var fpath     = [path, child].join('/');
     var ext       = extname(child);
     var name      = child.replace(ext, '');
     var canIndent = true;
+    console.log(child)
+    // skip `index.js`
+    if (!['index', 'index.js'].indexOf(child)) {
+      var rq = require(fpath);
+      for (var attrname in rq) { root[attrname] = rq[attrname]; }
+    }else{
 
-    if (isDirectory(fpath)) {
+      if (isDirectory(fpath)) {
 
-      var cpath = readdir(fpath);
-      if (false == isArray(cpath)) { cpath = []; }
-      if (exclude){
-        canIndent = true;
-        exclude.forEach(function (element, index) {
-          pathArray     = element.split("/");
-          pathArrayLast = pathArray.length;
-          target        = pathArray.splice(indent-1, 1);
+        var cpath = readdir(fpath);
+        if (false == isArray(cpath)) { cpath = []; }
+        if (exclude){
+          canIndent = true;
+          exclude.forEach(function (element, index) {
+            pathArray     = element.split("/");
+            pathArrayLast = pathArray.length;
+            target        = pathArray.splice(indent-1, 1);
 
-          if(target.indexOf(child) >= 0){
-            if(indent == pathArrayLast){
-              delete exclude[index];
-              canIndent = false;
+            if(target.indexOf(child) >= 0){
+              if(indent == pathArrayLast){
+                delete exclude[index];
+                canIndent = false;
+              }
             }
-          }
-        })
+          })
 
-        if(canIndent){
+          if(canIndent){
+            indent++;
+            root[name] = Tree(fpath, cpath, exclude, indent);
+            indent--;
+          }
+        }else{
           indent++;
           root[name] = Tree(fpath, cpath, exclude, indent);
           indent--;
         }
-      }else{
-        indent++;
-        root[name] = Tree(fpath, cpath, exclude, indent);
-        indent--;
-      }
 
-    } else if (isFile(fpath)) {
-      define(root, name, {
-        enumerable: true,
-        get: function () { return require(fpath) }
-      });
-    } else { throw new Error("Reached invalid file `"+ fpath +"'"); }
+      } else if (isFile(fpath)) {
+        define(root, name, {
+          enumerable: true,
+          get: function () { return require(fpath) }
+        });
+      } else { throw new Error("Reached invalid file `"+ fpath +"'"); }
+
+    }
   }(children[i]);
 
   return root;
