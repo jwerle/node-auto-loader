@@ -152,12 +152,9 @@ function Tree (root, children, exclude, indent) {
             }
           })
 
-          if(canIndent){
-            indent++;
-            root[name] = Tree(fpath, cpath, exclude, indent);
-            indent--;
-          }
-        }else{
+        }
+
+        if(exclude && canIndent || !exclude){
           indent++;
           root[name] = Tree(fpath, cpath, exclude, indent);
           indent--;
