@@ -128,9 +128,9 @@ function Tree (root, children, exclude, indent) {
     var name      = child.replace(ext, '');
     var canIndent = true;
     
-    if (!['index', 'index.js'].indexOf(child)) {
-      var rq = require(fpath);
-      for (var attrname in rq) { root[attrname] = rq[attrname]; }
+    if (['index', 'index.js'].indexOf(child) >= 0) {
+        var rq = require(fpath);
+        for (var attrname in rq) { root[attrname] = rq[attrname]; }
     }else{
 
       if (isDirectory(fpath)) {
