@@ -130,6 +130,7 @@ function Tree (root, children, exclude, indent) {
     
     if (['index', 'index.js'].indexOf(child) >= 0) {
         var rq = require(fpath);
+        if(rq.__autoload !== undefined){rq.__autoload();}
         for (var attrname in rq) { root[attrname] = rq[attrname]; }
     }else{
 
@@ -163,7 +164,11 @@ function Tree (root, children, exclude, indent) {
       } else if (isFile(fpath)) {
         define(root, name, {
           enumerable: true,
-          get: function () { return require(fpath) }
+          get: function () { 
+            var rq = require(fpath);
+            if(rq.__autoload !== undefined){rq.__autoload();}
+            return rq;
+          }
         });
       } else { throw new Error("Reached invalid file `"+ fpath +"'"); }
 
