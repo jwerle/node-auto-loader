@@ -1,0 +1,12 @@
+{
+  "private"      : true,
+  "name"         : "auto-loader",
+  "version"      : "0.2.1",
+  "description"  : "",
+  "keywords"     : [],
+  "dependencies" : {},
+  "repository"   : {
+    "type"       : "git",
+    "url"        : "git://github.com/florenthagard/node-auto-loader.git"
+  }
+}
