@@ -13,11 +13,11 @@ var fs   = require("fs");
 var path = require('path');
 
 module.exports = function(){
-
+  
   var autoload = {};
 
   function explore(pathToExplore){
-    if(fs.statSync(pathToExplore).isDirectory()){
+    if(fs.existsSync(pathToExplore) && fs.statSync(pathToExplore).isDirectory()){
       var childs  = fs.readdirSync(pathToExplore);
       var root    = {};
       for(file in childs){
@@ -27,15 +27,19 @@ module.exports = function(){
         root[fileName] = explore(pathToExplore + "/" +childs[file]);
       }
       return root;
-    } else {
-      return require(pathToExplore);
+    } else if(fs.existsSync(pathToExplore) && fs.statSync(pathToExplore).isFile()) {
+      var rq = require(pathToExplore);
+      if(rq.__autoload != undefined){rq.__autoload();}
+      return rq;
+    }else{
+      return undefined;
     }
   }
 
   return {
     load : function (require,callback){
       for (var i in require){ autoload[i] = explore(require[i]); }
-      if (callback != undefined){callback();}
+      if (callback != undefined){callback(autoload);}
       return autoload;
     }
   };
