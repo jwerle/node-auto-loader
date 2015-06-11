@@ -24,12 +24,15 @@ module.exports = function(){
         var fileName   = path.basename(childs[file]);
         var ext        = path.extname(fileName);
         var fileName   = fileName.replace(ext, '');
-        root[fileName] = explore(pathToExplore + "/" +childs[file]);
+        if(fileName == "index"){
+          var explored = explore(pathToExplore + "/" +childs[file]);
+          for(prop in explored){ root[prop] = explored[prop];}
+        } else{root[fileName] = explore(pathToExplore + "/" +childs[file]);}
       }
       return root;
     } else if(fs.existsSync(pathToExplore) && fs.statSync(pathToExplore).isFile()) {
       var rq = require(pathToExplore);
-      if(rq.__autoload != undefined){rq.__autoload();}
+      if(rq.__autoload != undefined){rq.__autoload();delete rq.__autoload;}
       return rq;
     }else{
       return undefined;
