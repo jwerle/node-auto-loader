@@ -26,7 +26,7 @@ module.exports = function(){
         var fileName   = fileName.replace(ext, '');
         if(fileName == "index"){
           var explored = explore(pathToExplore + "/" +childs[file]);
-          for(prop in explored){ root[prop] = explored[prop];}
+          for(var prop in explored){ root[prop] = explored[prop];}
         } else{root[fileName] = explore(pathToExplore + "/" +childs[file]);}
       }
       return root;
