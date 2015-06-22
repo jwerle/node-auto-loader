@@ -14,37 +14,56 @@ var path = require('path');
 
 module.exports = function(){
   
-  var autoload = {};
+  function explore(pathToExplore,force){
 
-  function explore(pathToExplore){
-    if(fs.existsSync(pathToExplore) && fs.statSync(pathToExplore).isDirectory()){
+    var DirectoryName = path.basename(pathToExplore);
+    var force         = force || false;
+
+    if(fs.existsSync(pathToExplore) 
+    && fs.statSync(pathToExplore).isDirectory() 
+    && (   DirectoryName[0] != DirectoryName[1] 
+        && DirectoryName[0] != "_" 
+        || force
+    )){
       var childs  = fs.readdirSync(pathToExplore);
       var root    = {};
-      for(file in childs){
+      for(var file in childs){
         var fileName   = path.basename(childs[file]);
         var ext        = path.extname(fileName);
         var fileName   = fileName.replace(ext, '');
-        if(fileName == "index"){
-          var explored = explore(pathToExplore + "/" +childs[file]);
-          for(var prop in explored){ root[prop] = explored[prop];}
-        } else{root[fileName] = explore(pathToExplore + "/" +childs[file]);}
+        if((fileName[0] != fileName[1] && fileName[0] != "_") || force){
+          if(force && fileName[0] == fileName[1] && fileName[0] == "_"){fileName = fileName.substring(2);}
+          if(fileName === "index"){
+            var explored = explore(pathToExplore + "/" +childs[file],force);
+            if(typeof explored === "object"){
+              for(var propertie in explored){ 
+                root[propertie] = explored[propertie];
+              }
+            } else{root         = explore(pathToExplore + "/" +childs[file],force);}
+          } else{root[fileName] = explore(pathToExplore + "/" +childs[file],force);}
+        }
       }
       return root;
     } else if(fs.existsSync(pathToExplore) && fs.statSync(pathToExplore).isFile()) {
       var rq = require(pathToExplore);
-      if(rq.__autoload != undefined){rq.__autoload();delete rq.__autoload;}
-      return rq;
+      if(rq.__autoload != undefined){
+               rq.__autoload();
+        delete rq.__autoload;
+      } return rq;
     }else{
       return undefined;
     }
   }
 
   return {
-    load : function (require,callback){
-      for (var i in require){ autoload[i] = explore(require[i]); }
-      if (callback != undefined){callback(autoload);}
+    load : function (requires,callbackOrForce,force){
+      var autoload = {};
+      var force    = (typeof callbackOrForce === "boolean") ? callbackOrForce || false : force || false;
+      if (typeof requires === "string"){ autoload = explore(requires,force); }
+      else { for(var i in requires){ autoload[i]  = explore(requires[i],force); }}
+      if (typeof callbackOrForce === "function"){ callbackOrForce(autoload);}
       return autoload;
     }
   };
 
-}();
+}()
