@@ -26,7 +26,9 @@ module.exports = function(){
         || force
     )){
       var childs  = fs.readdirSync(pathToExplore);
+          childs  = childs.sort(function(a, b) { return (a == "index.js") ? -1 : 1; });
       var root    = {};
+
       for(var file in childs){
         var fileName   = path.basename(childs[file]);
         var ext        = path.extname(fileName);
@@ -39,11 +41,10 @@ module.exports = function(){
               for(var propertie in explored){ 
                 root[propertie] = explored[propertie];
               }
-            } else{root         = explore(pathToExplore + "/" +childs[file],force);}
-          } else{root[fileName] = explore(pathToExplore + "/" +childs[file],force);}
+            } else{root         = explore(pathToExplore + "/" + childs[file],force);}
+          } else{root[fileName] = explore(pathToExplore + "/" + childs[file],force);}
         }
-      }
-      return root;
+      } return root;
     } else if(fs.existsSync(pathToExplore) && fs.statSync(pathToExplore).isFile()) {
       var rq = require(pathToExplore);
       if(rq.__autoload != undefined){
