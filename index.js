@@ -13,6 +13,8 @@ var fs   = require("fs");
 var path = require('path');
 
 module.exports = function(){
+
+  var afterload = [];
   
   function explore(pathToExplore,force){
 
@@ -48,9 +50,14 @@ module.exports = function(){
     } else if(fs.existsSync(pathToExplore) && fs.statSync(pathToExplore).isFile()) {
       var rq = require(pathToExplore);
       if(rq.__autoload != undefined){
-               rq.__autoload();
+               rq.__autoload()
         delete rq.__autoload;
-      } return rq;
+      } 
+      if(rq.__afterload != undefined){
+        afterload.push(rq.__afterload);
+        delete rq.__afterload;
+      } 
+      return rq;
     }else{
       return undefined;
     }
@@ -62,7 +69,7 @@ module.exports = function(){
       var force    = (typeof callbackOrForce === "boolean") ? callbackOrForce || false : force || false;
       if (typeof requires === "string"){ autoload = explore(requires,force); }
       else { for(var i in requires){ autoload[i]  = explore(requires[i],force); }}
-      if (typeof callbackOrForce === "function"){ callbackOrForce(autoload);}
+      if (typeof callbackOrForce === "function"){  callbackOrForce(autoload); for (var fct in afterload){ fct(); }}
       return autoload;
     }
   };
